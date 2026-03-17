@@ -1,0 +1,18 @@
+<main class="container">
+  <app-step-indicator [currentStep]="pasoActual()" />
+
+  <section class="content-area">
+    @if (pasoActual() === 1) {
+      <app-servicio-selector (onSelect)="avanzar()" />
+    }
+
+    @if (pasoActual() === 2) {
+      <div class="placeholder">Calendario y Horario (Próximamente)</div>
+      <button (click)="volver()">Volver</button>
+    }
+
+    @if (pasoActual() === 3) {
+      <div class="placeholder">Datos de Contacto (Próximamente)</div>
+    }
+  </section>
+</main>

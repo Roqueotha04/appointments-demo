@@ -1,0 +1,24 @@
+<h2 class="title">Seleccioná un servicio</h2>
+
+<div class="list-container">
+  @for (s of servicios(); track s.id) {
+    <div class="service-row" (click)="seleccionar(s)">
+      <div class="image-box">
+        <img src="https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=150&h=150&fit=crop" alt="Servicio">
+      </div>
+      
+      <div class="details">
+        <div class="header">
+          <h3>{{ s.nombre }}</h3>
+          <span class="duration"><i class="far fa-clock"></i> {{ s.duracion }}</span>
+        </div>
+        <p>{{ s.descripcion }}</p>
+        <span class="price">${{ s.price }}</span>
+      </div>
+
+      <div class="action">
+        <div class="arrow"></div>
+      </div>
+    </div>
+  }
+</div>

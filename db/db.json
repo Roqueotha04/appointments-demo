@@ -1,0 +1,52 @@
+{
+  "servicios": [
+    {
+      "id": 1,
+      "nombre": "Corte Caballero",
+      "precio": 2500,
+      "duracion": "30 min",
+      "descripcion": "Corte clásico o moderno con terminación a navaja."
+    },
+    {
+      "id": 2,
+      "nombre": "Corte + Barba",
+      "precio": 3500,
+      "duracion": "60 min",
+      "descripcion": "Combo completo de corte y perfilado de barba con ritual de toalla caliente."
+    },
+    {
+      "id": 3,
+      "nombre": "Corte Mujer",
+      "precio": 4500,
+      "duracion": "60 min",
+      "descripcion": "Corte de puntas o cambio de look, incluye lavado y secado simple."
+    },
+    {
+      "id": 4,
+      "nombre": "Color / Tintura",
+      "precio": 6000,
+      "duracion": "90 min",
+      "descripcion": "Aplicación de color y tratamiento de hidratación."
+    }
+  ],
+  "horariosDisponibles": [
+    { "id": "h1", "hora": "10:00" },
+    { "id": "h2", "hora": "10:30" },
+    { "id": "h3", "hora": "11:00" },
+    { "id": "h4", "hora": "11:30" },
+    { "id": "h5", "hora": "12:00" },
+    { "id": "h6", "hora": "12:30" },
+    { "id": "h7", "hora": "13:00" },
+    { "id": "h8", "hora": "13:30" },
+    { "id": "h9", "hora": "14:00" },
+    { "id": "h10", "hora": "14:30" },
+    { "id": "h11", "hora": "15:00" },
+    { "id": "h12", "hora": "15:30" },
+    { "id": "h13", "hora": "16:00" },
+    { "id": "h14", "hora": "16:30" },
+    { "id": "h15", "hora": "17:00" },
+    { "id": "h16", "hora": "17:30" },
+    { "id": "h17", "hora": "18:00" }
+  ],
+  "turnos": []
+}
