@@ -1,1 +1,33 @@
-<p>calendario-horario works!</p>
+<div class="step-container">
+  <h2 class="title">¿Cuándo quieres venir?</h2>
+
+  <div class="date-section">
+    <label>Seleccioná el día:</label>
+    <input type="date" class="date-input" (change)="seleccionarFecha($event)">
+  </div>
+
+  @if (fechaSeleccionada()) {
+    <div class="time-section">
+      <label>Horarios disponibles para el {{ fechaSeleccionada() }}:</label>
+      <div class="time-grid">
+        @for (h of horarios(); track h.id) {
+          <button 
+            class="time-chip" 
+            [class.selected]="horaSeleccionada() === h.hora"
+            (click)="seleccionarHora(h.hora)">
+            {{ h.hora }}
+          </button>
+        }
+      </div>
+    </div>
+  }
+
+  <div class="actions">
+    <button 
+      class="btn-confirm" 
+      [disabled]="!horaSeleccionada()" 
+      (click)="confirmar()">
+      Siguiente: Mis datos
+    </button>
+  </div>
+</div>

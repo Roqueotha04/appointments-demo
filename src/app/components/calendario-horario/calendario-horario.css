@@ -1,0 +1,87 @@
+.step-container {
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.title {
+  text-align: center;
+  color: #2c3e50;
+  margin-bottom: 2rem;
+}
+
+.date-section {
+  margin-bottom: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.date-input {
+  padding: 0.8rem;
+  border: 2px solid #eee;
+  border-radius: 8px;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.date-input:focus {
+  border-color: #2ecc71;
+}
+
+.time-section label {
+  display: block;
+  margin-bottom: 1rem;
+  font-weight: 600;
+  color: #34495e;
+}
+
+.time-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.8rem;
+  margin-bottom: 2.5rem;
+}
+
+.time-chip {
+  padding: 0.6rem;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.time-chip:hover {
+  border-color: #2ecc71;
+  color: #2ecc71;
+}
+
+.time-chip.selected {
+  background: #2ecc71;
+  color: white;
+  border-color: #2ecc71;
+}
+
+.btn-confirm {
+  width: 100%;
+  padding: 1rem;
+  background: #2ecc71;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.btn-confirm:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.btn-confirm:hover:not(:disabled) {
+  opacity: 0.9;
+}

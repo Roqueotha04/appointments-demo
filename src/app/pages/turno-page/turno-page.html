@@ -1,18 +1,37 @@
-<main class="container">
+<div class="turno-card">
   <app-step-indicator [currentStep]="pasoActual()" />
 
-  <section class="content-area">
-    @if (pasoActual() === 1) {
-      <app-servicio-selector (onSelect)="avanzar()" />
-    }
+  @if (cargando()) {
+    <div class="spinner-container">
+      <div class="loader"></div>
+      <p>Procesando tu reserva...</p>
+    </div>
+  }
 
-    @if (pasoActual() === 2) {
-      <div class="placeholder">Calendario y Horario (Próximamente)</div>
-      <button (click)="volver()">Volver</button>
-    }
-
-    @if (pasoActual() === 3) {
-      <div class="placeholder">Datos de Contacto (Próximamente)</div>
-    }
-  </section>
-</main>
+  @if (!cargando()) {
+    <div class="step-content">
+      @if (pasoActual() === 1) {
+        <app-servicio-selector (onSelect)="handleServicioSelected($event)" />
+      }
+      @if (pasoActual() === 2) {
+        <app-calendario-horario (onSelect)="handleFechaHoraSelected($event)" />
+        <div class="nav-footer">
+          <button class="btn-back" (click)="volver()">← Volver a servicios</button>
+        </div>
+      }
+      @if (pasoActual() === 3) {
+        <app-contacto-form (onConfirm)="handleFinalConfirm($event)" />
+        <div class="mini-summary">
+          <p>
+            Resumen: <strong>{{ datosTurno().servicio?.nombre }}</strong>
+            el {{ datosTurno().fecha }} a las {{ datosTurno().hora }}hs
+          </p>
+          <button class="btn-back" (click)="volver()">← Cambiar fecha</button>
+        </div>
+      }
+      @if (pasoActual() === 4) {
+        <app-success-view [info]="datosTurno()" />
+      }
+    </div>
+  }
+</div>

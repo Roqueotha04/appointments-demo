@@ -1,0 +1,85 @@
+.navbar {
+  height: 80px;
+  background-color: #fdfaf5; /* Crema pastel cálido */
+  border-bottom: 1px solid #e8e2d6; /* Borde sutil amarronado */
+  display: flex;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.nav-container {
+  width: 100%;
+  max-width: 1400px; /* Más ancho para empujar los elementos a las puntas */
+  margin: 0 auto;
+  padding: 0 3rem; /* Más padding lateral */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  font-family: 'Georgia', serif; /* Tipografía más formal */
+  font-weight: 700;
+  font-size: 1.4rem;
+  color: #4a3f35; /* Marrón café oscuro */
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.logo-thin {
+  font-weight: 300;
+  color: #8c7e6d; /* Marrón más suave */
+}
+
+.nav-center {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.tagline {
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: #a69076;
+  text-transform: uppercase;
+  letter-spacing: 4px;
+}
+
+.separator {
+  width: 20px;
+  height: 1px;
+  background-color: #dcd0c0;
+}
+
+.btn-contact {
+  background-color: #4a3f35; /* Botón marrón oscuro formal */
+  color: #fdfaf5;
+  text-decoration: none;
+  padding: 12px 24px;
+  border-radius: 2px; /* Menos redondeado = más formal */
+  font-weight: 500;
+  font-size: 0.75rem;
+  letter-spacing: 2px;
+  transition: all 0.3s ease;
+  border: 1px solid #4a3f35;
+}
+
+.btn-contact:hover {
+  background-color: transparent;
+  color: #4a3f35;
+  box-shadow: 0 4px 10px rgba(74, 63, 53, 0.1);
+}
+
+@media (max-width: 850px) {
+  .nav-container {
+    padding: 0 1.5rem;
+  }
+  .nav-center {
+    display: none;
+  }
+  .logo {
+    font-size: 1.1rem;
+  }
+}
