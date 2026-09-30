@@ -74,7 +74,7 @@ public class ReservasService : IReservasService
             .Where(t => t.ClienteId == clienteId)
             .OrderByDescending(t => t.InicioUtc)
             .Take(100)
-            .Select(t => new TurnoListaDto(t.Id, t.NegocioId, t.ServicioId, t.EmpleadoId, t.Negocio.Slug, t.Negocio.Nombre, t.Servicio.Nombre, t.Empleado.Nombre, t.InicioUtc, t.FinUtc, t.Estado))
+            .ALista(_db.Users.AsNoTracking())
             .ToListAsync(cancellationToken);
 
     public async Task<TurnoListaDto> ReprogramarAsync(Guid clienteId, Guid turnoId, ReprogramarTurnoRequest request, CancellationToken cancellationToken)
@@ -246,7 +246,7 @@ public class ReservasService : IReservasService
     private async Task<TurnoListaDto> ADto(Guid turnoId, CancellationToken cancellationToken) =>
         await _db.Turnos.AsNoTracking()
             .Where(t => t.Id == turnoId)
-            .Select(t => new TurnoListaDto(t.Id, t.NegocioId, t.ServicioId, t.EmpleadoId, t.Negocio.Slug, t.Negocio.Nombre, t.Servicio.Nombre, t.Empleado.Nombre, t.InicioUtc, t.FinUtc, t.Estado))
+            .ALista(_db.Users.AsNoTracking())
             .FirstAsync(cancellationToken);
 
     private async Task Avisar(Turno turno, string asunto, CancellationToken cancellationToken)

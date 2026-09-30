@@ -12,7 +12,9 @@ import { mensajeError } from '../core/auth.interceptor';
     @if (error()) { <p>{{ error() }}</p> }
     @for (turno of turnos(); track turno.id) {
       <article>
-        <strong>{{ turno.servicio }}</strong> con {{ turno.empleado }}
+        <strong>{{ turno.cliente }}</strong>
+        <span> {{ turno.clienteEmail }}</span>
+        <p>{{ turno.servicio }} con {{ turno.empleado }}</p>
         <p>{{ turno.inicioUtc | date:'full' }} · {{ turno.estado }}</p>
         @if (turno.estado === 'Confirmado') {
           <button type="button" (click)="cancelar(turno.id)">Cancelar</button>

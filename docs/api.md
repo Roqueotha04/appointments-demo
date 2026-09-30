@@ -24,7 +24,7 @@ Requieren sesión.
 - `PUT /api/negocios/{id}/empleados/{empleadoId}/servicios` `{ servicioIds }`
 - `GET/PUT /api/negocios/{id}/empleados/{empleadoId}/disponibilidad` `{ franjas: [{ diaSemana, horaInicio, horaFin }] }`
 - `GET/POST /api/negocios/{id}/empleados/{empleadoId}/bloqueos`, `DELETE .../bloqueos/{bloqueoId}`
-- `GET /api/negocios/{id}/turnos`
+- `GET /api/negocios/{id}/turnos` incluye `cliente` y `clienteEmail`
 
 `DELETE` de servicio o empleado los desactiva. No borra turnos históricos.
 
@@ -40,6 +40,6 @@ Público:
 Con sesión:
 
 - `POST /api/turnos` `{ negocioId, servicioId, empleadoId, inicioUtc }`
-- `GET /api/turnos/mios`
+- `GET /api/turnos/mios` incluye `cliente` y `clienteEmail`
 - `POST /api/turnos/{id}/reprogramar` `{ inicioUtc }`
 - `POST /api/turnos/{id}/cancelar`

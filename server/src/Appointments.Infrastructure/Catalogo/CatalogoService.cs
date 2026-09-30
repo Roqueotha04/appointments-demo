@@ -102,7 +102,6 @@ public class CatalogoService : ICatalogoService
         servicio.Descripcion = request.Descripcion.Trim();
         servicio.DuracionMinutos = request.DuracionMinutos;
         servicio.Precio = request.Precio;
-        servicio.Activo = true;
         await _db.SaveChangesAsync(cancellationToken);
         return ADto(servicio);
     }
@@ -147,7 +146,6 @@ public class CatalogoService : ICatalogoService
         await DelOwner(ownerId, negocioId, cancellationToken);
         var empleado = await EmpleadoDe(negocioId, empleadoId, cancellationToken);
         empleado.Nombre = Nombre(request.Nombre);
-        empleado.Activo = true;
         await _db.SaveChangesAsync(cancellationToken);
         var servicios = await _db.EmpleadoServicios.Where(v => v.EmpleadoId == empleadoId).Select(v => v.ServicioId).ToListAsync(cancellationToken);
         return new EmpleadoDto(empleado.Id, empleado.Nombre, empleado.Activo, servicios);
@@ -266,7 +264,7 @@ public class CatalogoService : ICatalogoService
             .Where(t => t.NegocioId == negocioId)
             .OrderByDescending(t => t.InicioUtc)
             .Take(200)
-            .Select(t => new TurnoListaDto(t.Id, t.NegocioId, t.ServicioId, t.EmpleadoId, t.Negocio.Slug, t.Negocio.Nombre, t.Servicio.Nombre, t.Empleado.Nombre, t.InicioUtc, t.FinUtc, t.Estado))
+            .ALista(_db.Users.AsNoTracking())
             .ToListAsync(cancellationToken);
     }
 

@@ -27,6 +27,8 @@ public record TurnoListaDto(
     string Negocio,
     string Servicio,
     string Empleado,
+    string Cliente,
+    string ClienteEmail,
     DateTime InicioUtc,
     DateTime FinUtc,
     EstadoTurno Estado);
