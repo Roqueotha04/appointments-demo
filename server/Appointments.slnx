@@ -5,4 +5,7 @@
     <Project Path="src/Appointments.Domain/Appointments.Domain.csproj" />
     <Project Path="src/Appointments.Infrastructure/Appointments.Infrastructure.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Appointments.Domain.Tests/Appointments.Domain.Tests.csproj" />
+  </Folder>
 </Solution>

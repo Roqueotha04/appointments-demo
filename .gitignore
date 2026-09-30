@@ -17,6 +17,7 @@ yarn-error.log
 *.suo
 *.userosscache
 *.sln.docstates
+server/local-mail/
 
 # IDEs and editors
 .idea/
