@@ -1,15 +1,22 @@
-# See https://docs.github.com/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
-
-# Compiled output
-/dist
-/tmp
-/out-tsc
-/bazel-out
-
-# Node
-/node_modules
+# Angular / Node (client)
+client/node_modules/
+client/dist/
+client/.angular/
+client/tmp/
+client/out-tsc/
+client/bazel-out/
+client/coverage/
 npm-debug.log
 yarn-error.log
+
+# .NET (server)
+[Bb]in/
+[Oo]bj/
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
 
 # IDEs and editors
 .idea/
@@ -29,10 +36,8 @@ yarn-error.log
 .history/*
 
 # Miscellaneous
-/.angular/cache
 .sass-cache/
 /connect.lock
-/coverage
 /libpeerconnection.log
 testem.log
 /typings

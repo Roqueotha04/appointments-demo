@@ -10,6 +10,23 @@
       "url": "http://localhost:4200/"
     },
     {
+      "name": "Appointments.Api",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-api",
+      "program": "${workspaceFolder}/server/src/Appointments.Api/bin/Debug/net10.0/Appointments.Api.dll",
+      "cwd": "${workspaceFolder}/server/src/Appointments.Api",
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "http://localhost:5080"
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "\\bNow listening on:\\s+(https?://\\S+)",
+        "uriFormat": "%s/swagger"
+      }
+    },
+    {
       "name": "ng test",
       "type": "chrome",
       "request": "launch",

@@ -1,59 +1,35 @@
 # DemoTurnos
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.3.7.
+Repositorio fullstack. El asistente de reserva sigue en Angular y la API vive en una solución .NET en capas.
 
-## Development server
-
-To start a local development server, run:
-
-```bash
-ng serve
+```text
+client/     Angular
+server/     Appointments.slnx
+  src/Appointments.Domain
+  src/Appointments.Application
+  src/Appointments.Infrastructure
+  src/Appointments.Api
+  seed/db.json
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+El cliente todavía no llama a esta API. Sigue leyendo servicios y horarios desde `http://localhost:3000`. `server/seed/db.json` guarda esos datos para cargarlos cuando exista el CRUD.
 
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+## Client
 
 ```bash
-ng generate component component-name
+cd client
+npm install
+npm start
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+La app queda en http://localhost:4200/.
+
+## Server
+
+Hace falta el SDK de .NET 10.
 
 ```bash
-ng generate --help
+dotnet run --project server/src/Appointments.Api --launch-profile http
 ```
 
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+Swagger queda en http://localhost:5080/swagger. La API todavía no expone turnos: las cuatro capas están creadas y referenciadas para el siguiente paso.
