@@ -1,33 +1,24 @@
 <div class="step-container">
-  <h2 class="title">¿Cuándo quieres venir?</h2>
-
+  <h2 class="title">¿Cuándo querés venir?</h2>
   <div class="date-section">
     <label>Seleccioná el día:</label>
     <input type="date" class="date-input" (change)="seleccionarFecha($event)">
   </div>
-
   @if (fechaSeleccionada()) {
     <div class="time-section">
-      <label>Horarios disponibles para el {{ fechaSeleccionada() }}:</label>
+      <label>Horarios disponibles</label>
       <div class="time-grid">
-        @for (h of horarios(); track h.id) {
-          <button 
-            class="time-chip" 
-            [class.selected]="horaSeleccionada() === h.hora"
-            (click)="seleccionarHora(h.hora)">
-            {{ h.hora }}
+        @for (h of huecos(); track h.inicioUtc) {
+          <button type="button" class="time-chip" [class.selected]="elegido() === h.inicioUtc" (click)="seleccionarHora(h.inicioUtc)">
+            {{ h.etiqueta }}
           </button>
+        } @empty {
+          <p>No hay lugar ese día.</p>
         }
       </div>
     </div>
   }
-
   <div class="actions">
-    <button 
-      class="btn-confirm" 
-      [disabled]="!horaSeleccionada()" 
-      (click)="confirmar()">
-      Siguiente: Mis datos
-    </button>
+    <button type="button" class="btn-confirm" [disabled]="!elegido()" (click)="confirmar()">Siguiente</button>
   </div>
 </div>

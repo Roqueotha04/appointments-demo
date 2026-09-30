@@ -1,41 +1,30 @@
-import { Component, output, inject, signal, OnInit } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { CommonModule } from '@angular/common';
+import { Component, input, output, signal } from '@angular/core';
 
 @Component({
   selector: 'app-calendario-horario',
-  standalone: true,
-  imports: [CommonModule],
   templateUrl: './calendario-horario.html',
-  styleUrl: './calendario-horario.css'
+  styleUrl: './calendario-horario.css',
 })
-export class CalendarioHorario implements OnInit {
-  private http = inject(HttpClient);
-  onSelect = output<{fecha: string, hora: string}>();
+export class CalendarioHorario {
+  huecos = input<{ inicioUtc: string; etiqueta: string }[]>([]);
+  fechaChange = output<string>();
+  onSelect = output<string>();
 
-  fechaSeleccionada = signal<string>('');
-  horarios = signal<any[]>([]);
-  horaSeleccionada = signal<string>('');
+  fechaSeleccionada = signal('');
+  elegido = signal('');
 
-  ngOnInit() {
-    this.http.get<any[]>('http://localhost:3000/horariosDisponibles')
-      .subscribe(res => this.horarios.set(res));
+  seleccionarFecha(event: Event) {
+    const fecha = (event.target as HTMLInputElement).value;
+    this.fechaSeleccionada.set(fecha);
+    this.elegido.set('');
+    this.fechaChange.emit(fecha);
   }
 
-  seleccionarFecha(event: any) {
-    this.fechaSeleccionada.set(event.target.value);
-  }
-
-  seleccionarHora(hora: string) {
-    this.horaSeleccionada.set(hora);
+  seleccionarHora(inicioUtc: string) {
+    this.elegido.set(inicioUtc);
   }
 
   confirmar() {
-    if (this.fechaSeleccionada() && this.horaSeleccionada()) {
-      this.onSelect.emit({
-        fecha: this.fechaSeleccionada(),
-        hora: this.horaSeleccionada()
-      });
-    }
+    if (this.elegido()) this.onSelect.emit(this.elegido());
   }
 }

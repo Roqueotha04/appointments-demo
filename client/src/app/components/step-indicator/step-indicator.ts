@@ -5,7 +5,7 @@ import { Component, input } from '@angular/core';
   standalone: true,
   template: `
     <div class="stepper">
-      @for (step of steps; track step) {
+      @for (step of steps(); track step) {
         <div class="step" [class.active]="currentStep() >= ($index + 1)">
           <div class="circle">{{ $index + 1 }}</div>
           <span>{{ step }}</span>
@@ -18,5 +18,5 @@ import { Component, input } from '@angular/core';
 })
 export class StepIndicator {
   currentStep = input.required<number>();
-  steps = ['Servicio', 'Fecha y Hora', 'Tus Datos'];
+  steps = input<string[]>(['Servicio', 'Profesional', 'Horario', 'Confirmar']);
 }

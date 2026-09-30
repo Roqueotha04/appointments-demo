@@ -1,0 +1,42 @@
+<div class="turno-card">
+  @if (error() && !negocio()) {
+    <p>{{ error() }}</p>
+  }
+  @if (negocio(); as negocio) {
+    <p class="mini-summary">{{ negocio.nombre }}</p>
+    @if (!listo()) {
+      <app-step-indicator [currentStep]="paso()" />
+      @if (paso() === 1) {
+        <app-servicio-selector [servicios]="servicios()" (onSelect)="elegirServicio($event)" />
+      }
+      @if (paso() === 2) {
+        <h2>¿Con quién?</h2>
+        <div class="empleados">
+          @for (empleado of empleados(); track empleado.id) {
+            <button type="button" (click)="elegirEmpleado(empleado)">{{ empleado.nombre }}</button>
+          }
+        </div>
+        <button class="btn-back" type="button" (click)="volver()">Volver</button>
+      }
+      @if (paso() === 3) {
+        <app-calendario-horario [huecos]="huecos()" (fechaChange)="cargarHuecos($event)" (onSelect)="elegirHorario($event)" />
+        <button class="btn-back" type="button" (click)="paso.set(empleados().length > 1 ? 2 : 1)">Volver</button>
+      }
+      @if (paso() === 4) {
+        <h2>Confirmá la reserva</h2>
+        <p>{{ servicio().nombre }} con {{ empleado().nombre }}</p>
+        <p>{{ horaElegida() }}</p>
+        @if (!auth.usuario()) {
+          <a routerLink="/ingresar" [queryParams]="{ returnUrl: '/' + negocio.slug }">Ingresá para confirmar</a>
+        }
+        <button type="button" (click)="confirmar()">Confirmar turno</button>
+        @if (error()) { <p>{{ error() }}</p> }
+        <button class="btn-back" type="button" (click)="volver()">Cambiar horario</button>
+      }
+    } @else {
+      <h2>Turno confirmado</h2>
+      <p>Te guardamos el mail en la bandeja local del servidor.</p>
+      <a routerLink="/cuenta/turnos">Ver mis turnos</a>
+    }
+  }
+</div>

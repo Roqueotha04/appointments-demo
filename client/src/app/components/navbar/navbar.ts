@@ -1,18 +1,18 @@
-import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
+import { AuthService } from '../../core/auth.service';
 
 @Component({
   selector: 'app-navbar',
-  standalone: true,
-  imports: [CommonModule],
+  imports: [RouterLink],
   templateUrl: './navbar.html',
-  styleUrl: './navbar.css'
+  styleUrl: './navbar.css',
 })
 export class Navbar {
-  readonly PHONE_NUMBER = '542236680996'; 
+  readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
 
-  get whatsappUrl(): string {
-    const message = encodeURIComponent('Estimados, me contacto desde la plataforma de turnos para realizar una consulta.');
-    return `https://wa.me/${this.PHONE_NUMBER}?text=${message}`;
+  salir() {
+    this.auth.logout().subscribe(() => this.router.navigateByUrl('/'));
   }
 }

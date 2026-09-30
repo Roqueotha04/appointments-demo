@@ -83,3 +83,23 @@
     font-size: 1.1rem;
   }
 }
+
+.logo {
+  text-decoration: none;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.nav-links a,
+.nav-links button {
+  color: #4a3f35;
+  text-decoration: none;
+  background: none;
+  border: 0;
+  font-size: 0.85rem;
+  cursor: pointer;
+}

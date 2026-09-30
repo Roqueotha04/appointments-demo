@@ -37,12 +37,8 @@ export class TurnoPage {
     this.avanzar();
   }
 
-  handleFechaHoraSelected(seleccion: { fecha: string; hora: string }) {
-    this.datosTurno.update(prev => ({ 
-      ...prev, 
-      fecha: seleccion.fecha, 
-      hora: seleccion.hora 
-    }));
+  handleFechaHoraSelected(inicioUtc: string) {
+    this.datosTurno.update(prev => ({ ...prev, fecha: inicioUtc, hora: inicioUtc }));
     this.avanzar();
   }
 

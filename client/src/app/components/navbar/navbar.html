@@ -1,19 +1,18 @@
 <nav class="navbar">
   <div class="nav-container">
-    <div class="nav-left">
-      <span class="logo">DEMO -<span class="logo-thin">  TURNOS</span></span>
-    </div>
-
+    <a class="logo" routerLink="/">TURNOS</a>
     <div class="nav-center">
-      <span class="separator"></span>
-      <span class="tagline">Reserva Online</span>
-      <span class="separator"></span>
+      <span class="tagline">Reservas</span>
     </div>
-
-    <div class="nav-right">
-      <a [href]="whatsappUrl" target="_blank" class="btn-contact">
-        SOLICITAR ASISTENCIA
-      </a>
+    <div class="nav-right nav-links">
+      @if (auth.usuario(); as usuario) {
+        <a routerLink="/cuenta/turnos">Mis turnos</a>
+        <a routerLink="/admin">Panel</a>
+        <button type="button" (click)="salir()">Salir</button>
+      } @else {
+        <a routerLink="/ingresar">Ingresar</a>
+        <a routerLink="/registro" class="btn-contact">Crear cuenta</a>
+      }
     </div>
   </div>
 </nav>
