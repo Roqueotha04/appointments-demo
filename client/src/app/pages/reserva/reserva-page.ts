@@ -11,7 +11,7 @@ import { mensajeError } from '../../core/auth.interceptor';
   selector: 'app-reserva-page',
   imports: [StepIndicator, ServicioSelector, CalendarioHorario, RouterLink],
   templateUrl: './reserva-page.html',
-  styleUrl: '../turno-page/turno-page.css',
+  styleUrl: './reserva-page.css',
 })
 export class ReservaPage implements OnInit {
   private readonly http = inject(HttpClient);
