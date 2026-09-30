@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
-import { Observable, tap } from 'rxjs';
+import { Observable, finalize, shareReplay, tap } from 'rxjs';
 
 export interface Usuario {
   id: string;
@@ -19,6 +19,7 @@ export interface Sesion {
 export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly accessToken = signal<string | null>(null);
+  private refresco: Observable<Sesion> | null = null;
   readonly usuario = signal<Usuario | null>(null);
 
   token(): string | null {
@@ -34,7 +35,13 @@ export class AuthService {
   }
 
   refresh(): Observable<Sesion> {
-    return this.guardar(this.http.post<Sesion>('/api/auth/refresh', {}));
+    this.refresco ??= this.guardar(this.http.post<Sesion>('/api/auth/refresh', {})).pipe(
+      finalize(() => {
+        this.refresco = null;
+      }),
+      shareReplay(1),
+    );
+    return this.refresco;
   }
 
   logout(): Observable<void> {

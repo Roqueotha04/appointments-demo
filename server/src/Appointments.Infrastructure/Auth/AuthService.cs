@@ -58,19 +58,29 @@ public class AuthService : IAuthService
     {
         var email = request.Email.Trim().ToLowerInvariant();
         var usuario = await _users.FindByEmailAsync(email);
-        if (usuario is null || !await _users.CheckPasswordAsync(usuario, request.Password))
+        if (usuario is null)
             throw new ReglaDeNegocioException(401, "Credenciales", "Email o contraseña incorrectos.");
 
         if (await _users.IsLockedOutAsync(usuario))
             throw new ReglaDeNegocioException(401, "Cuenta bloqueada", "Demasiados intentos. Probá más tarde.");
 
+        if (!await _users.CheckPasswordAsync(usuario, request.Password))
+        {
+            await _users.AccessFailedAsync(usuario);
+            if (await _users.IsLockedOutAsync(usuario))
+                throw new ReglaDeNegocioException(401, "Cuenta bloqueada", "Demasiados intentos. Probá más tarde.");
+
+            throw new ReglaDeNegocioException(401, "Credenciales", "Email o contraseña incorrectos.");
+        }
+
+        await _users.ResetAccessFailedCountAsync(usuario);
         return await EmitirAsync(usuario, cancellationToken);
     }
 
     public async Task<SesionEmitida> RefreshAsync(string refreshToken, CancellationToken cancellationToken)
     {
         var hash = _tokens.Hash(refreshToken);
-        var guardado = await _db.RefreshTokens.Include(x => x.Usuario)
+        var guardado = await _db.RefreshTokens.AsNoTracking().Include(x => x.Usuario)
             .FirstOrDefaultAsync(x => x.TokenHash == hash, cancellationToken);
 
         if (guardado is null)
@@ -82,13 +92,19 @@ public class AuthService : IAuthService
             throw new ReglaDeNegocioException(401, "Sesión", "La sesión no es válida.");
         }
 
-        if (guardado.ExpiraUtc <= _clock.GetUtcNow().UtcDateTime)
+        var ahora = _clock.GetUtcNow().UtcDateTime;
+        if (guardado.ExpiraUtc <= ahora)
             throw new ReglaDeNegocioException(401, "Sesión", "La sesión expiró.");
 
         var nuevo = _tokens.EmitirRefresh();
-        guardado.RevocadoUtc = _clock.GetUtcNow().UtcDateTime;
-        guardado.ReemplazadoPorHash = _tokens.Hash(nuevo);
-        await _db.SaveChangesAsync(cancellationToken);
+        var filas = await _db.RefreshTokens
+            .Where(x => x.Id == guardado.Id && x.RevocadoUtc == null && x.ExpiraUtc > ahora)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(x => x.RevocadoUtc, ahora)
+                .SetProperty(x => x.ReemplazadoPorHash, _tokens.Hash(nuevo)), cancellationToken);
+
+        if (filas == 0)
+            throw new ReglaDeNegocioException(401, "Sesión", "La sesión no es válida.");
 
         return await EmitirAsync(guardado.Usuario, cancellationToken, nuevo);
     }
