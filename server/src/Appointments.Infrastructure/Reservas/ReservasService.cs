@@ -7,6 +7,7 @@ using Appointments.Infrastructure.Identity;
 using Appointments.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Appointments.Infrastructure.Reservas;
 
@@ -62,9 +63,9 @@ public class ReservasService : IReservasService
 
     public async Task<TurnoListaDto> CrearAsync(Guid clienteId, CrearTurnoRequest request, CancellationToken cancellationToken)
     {
-        await using var tx = await _db.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken);
-        var turno = await Reservar(clienteId, request.NegocioId, request.ServicioId, request.EmpleadoId, request.InicioUtc, turnoExistente: null, cancellationToken);
-        await tx.CommitAsync(cancellationToken);
+        var turno = await EnSerializableAsync(
+            ct => Reservar(clienteId, request.NegocioId, request.ServicioId, request.EmpleadoId, request.InicioUtc, turnoExistente: null, ct),
+            cancellationToken);
         await Avisar(turno, "Tu turno quedó confirmado", cancellationToken);
         return await ADto(turno.Id, cancellationToken);
     }
@@ -79,16 +80,17 @@ public class ReservasService : IReservasService
 
     public async Task<TurnoListaDto> ReprogramarAsync(Guid clienteId, Guid turnoId, ReprogramarTurnoRequest request, CancellationToken cancellationToken)
     {
-        await using var tx = await _db.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken);
-        var actual = await _db.Turnos.FirstOrDefaultAsync(t => t.Id == turnoId, cancellationToken)
-            ?? throw new ReglaDeNegocioException(404, "Turno", "No encontramos ese turno.");
-        if (actual.ClienteId != clienteId)
-            throw new ReglaDeNegocioException(404, "Turno", "No encontramos ese turno.");
-        if (actual.Estado != EstadoTurno.Confirmado)
-            throw new ReglaDeNegocioException(409, "Turno", "Ese turno ya no se puede mover.");
+        var turno = await EnSerializableAsync(async ct =>
+        {
+            var actual = await _db.Turnos.FirstOrDefaultAsync(t => t.Id == turnoId, ct)
+                ?? throw new ReglaDeNegocioException(404, "Turno", "No encontramos ese turno.");
+            if (actual.ClienteId != clienteId)
+                throw new ReglaDeNegocioException(404, "Turno", "No encontramos ese turno.");
+            if (actual.Estado != EstadoTurno.Confirmado)
+                throw new ReglaDeNegocioException(409, "Turno", "Ese turno ya no se puede mover.");
 
-        var turno = await Reservar(clienteId, actual.NegocioId, actual.ServicioId, actual.EmpleadoId, request.InicioUtc, actual, cancellationToken);
-        await tx.CommitAsync(cancellationToken);
+            return await Reservar(clienteId, actual.NegocioId, actual.ServicioId, actual.EmpleadoId, request.InicioUtc, actual, ct);
+        }, cancellationToken);
         await Avisar(turno, "Tu turno fue reprogramado", cancellationToken);
         return await ADto(turno.Id, cancellationToken);
     }
@@ -127,6 +129,8 @@ public class ReservasService : IReservasService
             ?? throw new ReglaDeNegocioException(404, "Negocio", "No encontramos ese negocio.");
         var servicio = await ServicioActivo(negocio.Id, servicioId, cancellationToken);
         await EmpleadoOfrece(empleadoId, servicioId, cancellationToken);
+        await BloquearFila("SELECT `Id` FROM `AspNetUsers` WHERE `Id` = @id FOR UPDATE", clienteId, cancellationToken);
+        await BloquearFila("SELECT `Id` FROM `Empleados` WHERE `Id` = @id FOR UPDATE", empleadoId, cancellationToken);
 
         var inicioUtc = inicio.UtcDateTime;
         var zona = ZonasHorarias.Obtener(negocio.ZonaHoraria);
@@ -136,10 +140,7 @@ public class ReservasService : IReservasService
         if (!huecos.Any(h => Math.Abs((h - inicioUtc).TotalSeconds) < 1))
             throw new ReglaDeNegocioException(409, "Horario", "Ese horario ya no está disponible.");
 
-        var diaInicio = fecha.ToDateTime(TimeOnly.MinValue);
-        var diaFin = fecha.AddDays(1).ToDateTime(TimeOnly.MinValue);
-        var desdeUtc = TimeZoneInfo.ConvertTimeToUtc(DateTime.SpecifyKind(diaInicio, DateTimeKind.Unspecified), zona);
-        var hastaUtc = TimeZoneInfo.ConvertTimeToUtc(DateTime.SpecifyKind(diaFin, DateTimeKind.Unspecified), zona);
+        var (desdeUtc, hastaUtc) = ZonasHorarias.LimitesDelDiaUtc(fecha, zona);
 
         var otroElMismoDia = await _db.Turnos.AnyAsync(t =>
             t.ClienteId == clienteId
@@ -198,15 +199,11 @@ public class ReservasService : IReservasService
             .Where(d => d.EmpleadoId == empleadoId && d.DiaSemana == dia)
             .ToListAsync(cancellationToken);
 
-        var ventanas = franjas.Select(f =>
-        {
-            var inicio = TimeZoneInfo.ConvertTimeToUtc(DateTime.SpecifyKind(fecha.ToDateTime(f.HoraInicio), DateTimeKind.Unspecified), zona);
-            var fin = TimeZoneInfo.ConvertTimeToUtc(DateTime.SpecifyKind(fecha.ToDateTime(f.HoraFin), DateTimeKind.Unspecified), zona);
-            return new Intervalo(inicio, fin);
-        });
+        var ventanas = franjas.Select(f => new Intervalo(
+            ZonasHorarias.AUtc(fecha, f.HoraInicio, zona),
+            ZonasHorarias.AUtc(fecha, f.HoraFin, zona)));
 
-        var desde = TimeZoneInfo.ConvertTimeToUtc(DateTime.SpecifyKind(fecha.ToDateTime(TimeOnly.MinValue), DateTimeKind.Unspecified), zona);
-        var hasta = desde.AddDays(1);
+        var (desde, hasta) = ZonasHorarias.LimitesDelDiaUtc(fecha, zona);
         var turnos = await _db.Turnos.AsNoTracking()
             .Where(t => t.EmpleadoId == empleadoId && t.Estado == EstadoTurno.Confirmado && t.InicioUtc < hasta && t.FinUtc > desde)
             .Where(t => excluirTurnoId == null || t.Id != excluirTurnoId)
@@ -248,6 +245,52 @@ public class ReservasService : IReservasService
             .Where(t => t.Id == turnoId)
             .ALista(_db.Users.AsNoTracking())
             .FirstAsync(cancellationToken);
+
+    private async Task<T> EnSerializableAsync<T>(Func<CancellationToken, Task<T>> accion, CancellationToken cancellationToken)
+    {
+        const int maximo = 3;
+        for (var intento = 1; ; intento++)
+        {
+            await using var tx = await _db.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken);
+            try
+            {
+                var resultado = await accion(cancellationToken);
+                await tx.CommitAsync(cancellationToken);
+                return resultado;
+            }
+            catch (Exception ex) when (intento < maximo && EsInterbloqueo(ex))
+            {
+                _db.ChangeTracker.Clear();
+            }
+        }
+    }
+
+    private static bool EsInterbloqueo(Exception ex)
+    {
+        for (var actual = ex; actual is not null; actual = actual.InnerException)
+        {
+            if (actual is MySqlConnector.MySqlException mysql && mysql.Number is 1213 or 1205)
+                return true;
+        }
+
+        return false;
+    }
+
+    private async Task BloquearFila(string sql, Guid id, CancellationToken cancellationToken)
+    {
+        var conexion = _db.Database.GetDbConnection();
+        if (conexion.State != ConnectionState.Open)
+            await conexion.OpenAsync(cancellationToken);
+
+        await using var comando = conexion.CreateCommand();
+        comando.Transaction = _db.Database.CurrentTransaction!.GetDbTransaction();
+        comando.CommandText = sql;
+        var parametro = comando.CreateParameter();
+        parametro.ParameterName = "@id";
+        parametro.Value = id.ToString();
+        comando.Parameters.Add(parametro);
+        await comando.ExecuteScalarAsync(cancellationToken);
+    }
 
     private async Task Avisar(Turno turno, string asunto, CancellationToken cancellationToken)
     {

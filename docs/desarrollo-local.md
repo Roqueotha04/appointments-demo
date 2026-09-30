@@ -29,6 +29,8 @@ npm start
 
 Los correos quedan en `server/local-mail/`.
 
+Los tests de reservas usan la misma cadena y una base distinta, `appointments_test`. No tocan la base de desarrollo.
+
 La herramienta de migraciones está en `server/dotnet-tools.json`. Desde `server/`:
 
 ```bash

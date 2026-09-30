@@ -13,4 +13,10 @@ public static class ZonasHorarias
 
         throw new TimeZoneNotFoundException($"No se reconoce la zona horaria {id}.");
     }
+
+    public static DateTime AUtc(DateOnly fecha, TimeOnly hora, TimeZoneInfo zona) =>
+        TimeZoneInfo.ConvertTimeToUtc(DateTime.SpecifyKind(fecha.ToDateTime(hora), DateTimeKind.Unspecified), zona);
+
+    public static (DateTime DesdeUtc, DateTime HastaUtc) LimitesDelDiaUtc(DateOnly fecha, TimeZoneInfo zona) =>
+        (AUtc(fecha, TimeOnly.MinValue, zona), AUtc(fecha.AddDays(1), TimeOnly.MinValue, zona));
 }

@@ -329,8 +329,7 @@ public class CatalogoService : ICatalogoService
     {
         if (!DateOnly.TryParse(fecha, out var dia) || !TimeOnly.TryParse(hora, out var reloj))
             throw new ReglaDeNegocioException(400, "Bloqueo", "La fecha o la hora no son válidas.");
-        var local = dia.ToDateTime(reloj);
-        return TimeZoneInfo.ConvertTimeToUtc(DateTime.SpecifyKind(local, DateTimeKind.Unspecified), zona);
+        return ZonasHorarias.AUtc(dia, reloj, zona);
     }
 
     private static void ValidarServicio(GuardarServicioRequest request)
