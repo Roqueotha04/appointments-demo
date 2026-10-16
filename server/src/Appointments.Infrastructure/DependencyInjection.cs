@@ -46,7 +46,9 @@ public static class DependencyInjection
         services.AddScoped<IEmisorDeTokens, JwtEmisor>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<ICatalogoService, CatalogoService>();
-        services.AddScoped<IReservasService, ReservasService>();
+        services.AddScoped<IAgenda, Agenda>();
+        services.AddScoped<IUnidadDeTrabajo, UnidadDeTrabajo>();
+        services.AddScoped<IReservasService, Application.Reservas.ReservasService>();
         services.AddSingleton<IConfirmacionCorreo, LocalConfirmacionCorreo>();
         return services;
     }

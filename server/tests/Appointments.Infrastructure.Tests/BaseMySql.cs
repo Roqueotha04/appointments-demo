@@ -65,7 +65,9 @@ public sealed class BaseMySql : IAsyncLifetime
         services.AddSingleton<IConfirmacionCorreo, CorreoNulo>();
         services.AddScoped<IEmisorDeTokens, JwtEmisor>();
         services.AddScoped<IAuthService, AuthService>();
-        services.AddScoped<IReservasService, ReservasService>();
+        services.AddScoped<IAgenda, Agenda>();
+        services.AddScoped<IUnidadDeTrabajo, UnidadDeTrabajo>();
+        services.AddScoped<IReservasService, Application.Reservas.ReservasService>();
         return services.BuildServiceProvider();
     }
 

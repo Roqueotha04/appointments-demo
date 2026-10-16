@@ -8,8 +8,8 @@ Leé `docs/dominio.md` antes de tocar reservas, horarios o permisos.
 
 - `client/`: Angular. La API se consume por el proxy `/api` hacia `http://localhost:5080`.
 - `server/src/Appointments.Domain`: entidades y cálculo de huecos.
-- `server/src/Appointments.Application`: casos de uso. No referencia EF ni HTTP.
-- `server/src/Appointments.Infrastructure`: MySQL, Identity, JWT y el mail local.
+- `server/src/Appointments.Application`: casos de uso, DTOs y puertos. No referencia EF ni HTTP. Hoy tiene los de reservas; catálogo y auth siguen en Infrastructure.
+- `server/src/Appointments.Infrastructure`: MySQL, Identity, JWT, el mail local, la implementación de los puertos y los servicios de catálogo y auth.
 - `server/src/Appointments.Api`: controladores finos.
 - `server/local-mail/`: correos de desarrollo. No se commitea.
 - `docs/`: operación y contrato.

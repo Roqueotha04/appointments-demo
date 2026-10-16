@@ -45,6 +45,57 @@ public class ReservasYAuthTests
     }
 
     [Fact]
+    public async Task Un_cliente_no_puede_tener_dos_turnos_el_mismo_dia_pero_si_mover_el_propio()
+    {
+        var reloj = new RelojFijo(new DateTimeOffset(2026, 9, 28, 12, 0, 0, TimeSpan.Zero));
+        await using var servicios = BaseMySql.Crear(_mysql.ConnectionString, reloj);
+        var e = await ArmarNegocio(servicios);
+        await using var scope = servicios.CreateAsyncScope();
+        var reservas = scope.ServiceProvider.GetRequiredService<IReservasService>();
+        var trece = new DateTimeOffset(2026, 9, 28, 13, 0, 0, TimeSpan.Zero);
+
+        var turno = await reservas.CrearAsync(e.Cliente1, new CrearTurnoRequest(e.NegocioId, e.ServicioId, e.EmpleadoId, trece), CancellationToken.None);
+
+        var segundo = await Assert.ThrowsAsync<ReglaDeNegocioException>(() =>
+            reservas.CrearAsync(e.Cliente1, new CrearTurnoRequest(e.NegocioId, e.ServicioId, e.EmpleadoId, trece.AddMinutes(60)), CancellationToken.None));
+        Assert.Equal(409, segundo.Status);
+        Assert.Equal("Límite diario", segundo.Titulo);
+
+        var movido = await reservas.ReprogramarAsync(e.Cliente1, turno.Id, new ReprogramarTurnoRequest(trece.AddMinutes(60)), CancellationToken.None);
+        Assert.Equal(turno.Id, movido.Id);
+        Assert.Equal(trece.AddMinutes(60).UtcDateTime, movido.InicioUtc);
+        Assert.Equal(EstadoTurno.Confirmado, movido.Estado);
+    }
+
+    [Fact]
+    public async Task Solo_el_cliente_mueve_su_turno_y_cancelan_el_cliente_o_el_dueno()
+    {
+        var reloj = new RelojFijo(new DateTimeOffset(2026, 9, 28, 12, 0, 0, TimeSpan.Zero));
+        await using var servicios = BaseMySql.Crear(_mysql.ConnectionString, reloj);
+        var e = await ArmarNegocio(servicios);
+        await using var scope = servicios.CreateAsyncScope();
+        var reservas = scope.ServiceProvider.GetRequiredService<IReservasService>();
+        var trece = new DateTimeOffset(2026, 9, 28, 13, 0, 0, TimeSpan.Zero);
+        var turno = await reservas.CrearAsync(e.Cliente1, new CrearTurnoRequest(e.NegocioId, e.ServicioId, e.EmpleadoId, trece), CancellationToken.None);
+
+        var ajenoMueve = await Assert.ThrowsAsync<ReglaDeNegocioException>(() =>
+            reservas.ReprogramarAsync(e.Cliente2, turno.Id, new ReprogramarTurnoRequest(trece.AddMinutes(60)), CancellationToken.None));
+        Assert.Equal(404, ajenoMueve.Status);
+
+        var ajenoCancela = await Assert.ThrowsAsync<ReglaDeNegocioException>(() =>
+            reservas.CancelarAsync(e.Cliente2, turno.Id, CancellationToken.None));
+        Assert.Equal(404, ajenoCancela.Status);
+
+        await reservas.CancelarAsync(e.Dueno, turno.Id, CancellationToken.None);
+        var mios = await reservas.MiosAsync(e.Cliente1, CancellationToken.None);
+        Assert.Equal(EstadoTurno.Cancelado, Assert.Single(mios).Estado);
+
+        var yaCancelado = await Assert.ThrowsAsync<ReglaDeNegocioException>(() =>
+            reservas.ReprogramarAsync(e.Cliente1, turno.Id, new ReprogramarTurnoRequest(trece.AddMinutes(60)), CancellationToken.None));
+        Assert.Equal(409, yaCancelado.Status);
+    }
+
+    [Fact]
     public async Task El_quinto_intento_bloquea_la_cuenta()
     {
         await using var servicios = BaseMySql.Crear(_mysql.ConnectionString, TimeProvider.System);
@@ -111,7 +162,7 @@ public class ReservasYAuthTests
             HoraFin = new TimeOnly(18, 0)
         });
         await db.SaveChangesAsync();
-        return new Escenario(negocio.Id, servicio.Id, empleado.Id, cliente1.Sesion.Usuario.Id, cliente2.Sesion.Usuario.Id);
+        return new Escenario(negocio.Id, servicio.Id, empleado.Id, cliente1.Sesion.Usuario.Id, cliente2.Sesion.Usuario.Id, dueno.Sesion.Usuario.Id);
     }
 
     private static async Task<ReglaDeNegocioException?> Capturar(Task tarea)
@@ -127,7 +178,7 @@ public class ReservasYAuthTests
         }
     }
 
-    private sealed record Escenario(Guid NegocioId, Guid ServicioId, Guid EmpleadoId, Guid Cliente1, Guid Cliente2);
+    private sealed record Escenario(Guid NegocioId, Guid ServicioId, Guid EmpleadoId, Guid Cliente1, Guid Cliente2, Guid Dueno);
 
     private sealed class RelojFijo : TimeProvider
     {
