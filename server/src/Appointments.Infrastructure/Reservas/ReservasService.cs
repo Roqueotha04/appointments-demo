@@ -8,6 +8,7 @@ using Appointments.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Logging;
 
 namespace Appointments.Infrastructure.Reservas;
 
@@ -17,13 +18,15 @@ public class ReservasService : IReservasService
     private readonly UserManager<Usuario> _users;
     private readonly IConfirmacionCorreo _correo;
     private readonly TimeProvider _clock;
+    private readonly ILogger<ReservasService> _log;
 
-    public ReservasService(AppDbContext db, UserManager<Usuario> users, IConfirmacionCorreo correo, TimeProvider clock)
+    public ReservasService(AppDbContext db, UserManager<Usuario> users, IConfirmacionCorreo correo, TimeProvider clock, ILogger<ReservasService> log)
     {
         _db = db;
         _users = users;
         _correo = correo;
         _clock = clock;
+        _log = log;
     }
 
     public async Task<NegocioPublicoDto?> ObtenerNegocioAsync(string slug, CancellationToken cancellationToken)
@@ -292,15 +295,23 @@ public class ReservasService : IReservasService
         await comando.ExecuteScalarAsync(cancellationToken);
     }
 
+    // El turno ya está guardado: un fallo del correo no debe tumbar la respuesta.
     private async Task Avisar(Turno turno, string asunto, CancellationToken cancellationToken)
     {
-        var cliente = await _users.FindByIdAsync(turno.ClienteId.ToString());
-        if (cliente?.Email is null)
-            return;
+        try
+        {
+            var cliente = await _users.FindByIdAsync(turno.ClienteId.ToString());
+            if (cliente?.Email is null)
+                return;
 
-        var zona = ZonasHorarias.Obtener(turno.Negocio.ZonaHoraria);
-        var local = TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(turno.InicioUtc, DateTimeKind.Utc), zona);
-        var cuerpo = $"{asunto}.\n{turno.Negocio.Nombre}\n{turno.Servicio.Nombre} con {turno.Empleado.Nombre}\n{local:dddd d 'de' MMMM, HH:mm}";
-        await _correo.EnviarAsync(cliente.Email, asunto, cuerpo, cancellationToken);
+            var zona = ZonasHorarias.Obtener(turno.Negocio.ZonaHoraria);
+            var local = TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(turno.InicioUtc, DateTimeKind.Utc), zona);
+            var cuerpo = $"{asunto}.\n{turno.Negocio.Nombre}\n{turno.Servicio.Nombre} con {turno.Empleado.Nombre}\n{local:dddd d 'de' MMMM, HH:mm}";
+            await _correo.EnviarAsync(cliente.Email, asunto, cuerpo, cancellationToken);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _log.LogError(ex, "No se pudo enviar el correo del turno {TurnoId} ({Asunto}).", turno.Id, asunto);
+        }
     }
 }

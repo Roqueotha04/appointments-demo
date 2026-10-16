@@ -1,3 +1,4 @@
+using System.Net;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
@@ -6,6 +7,7 @@ using Appointments.Api.Json;
 using Appointments.Infrastructure;
 using Appointments.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
@@ -42,10 +44,14 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 builder.Services.AddAuthorization();
 
+var origenes = builder.Configuration.GetSection("Cors:Origenes").Get<string[]>();
+if (origenes is not { Length: > 0 })
+    throw new InvalidOperationException("Falta Cors:Origenes en la configuración.");
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("Client", policy =>
-        policy.WithOrigins("http://localhost:4200")
+        policy.WithOrigins(origenes)
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials());
@@ -76,7 +82,23 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+// El rate limit particiona por IP. Detrás de un proxy hay que leer X-Forwarded-For,
+// pero solo de proxies conocidos: si no, cualquiera podría falsear su IP.
+var proxies = builder.Configuration.GetSection("ForwardedHeaders:ProxiesConfiables").Get<string[]>() ?? [];
+if (proxies.Length > 0)
+{
+    builder.Services.Configure<ForwardedHeadersOptions>(options =>
+    {
+        options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+        foreach (var proxy in proxies)
+            options.KnownProxies.Add(IPAddress.Parse(proxy));
+    });
+}
+
 var app = builder.Build();
+
+if (proxies.Length > 0)
+    app.UseForwardedHeaders();
 
 if (app.Environment.IsDevelopment())
 {

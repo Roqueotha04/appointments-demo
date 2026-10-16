@@ -29,6 +29,10 @@ npm start
 
 Los correos quedan en `server/local-mail/`.
 
+Detrás de un proxy o balanceador, el límite de intentos vería siempre la IP del proxy. Para que use la del cliente, listá las IPs del proxy en `ForwardedHeaders:ProxiesConfiables` (`ForwardedHeaders__ProxiesConfiables__0`, etc.). Si la lista está vacía, no se leen los headers `X-Forwarded-*`.
+
+Los orígenes que puede usar el browser contra la API están en `Cors:Origenes` (`appsettings.json`, por defecto `http://localhost:4200`). Al desplegar, se pisan con `Cors__Origenes__0`, `Cors__Origenes__1`, etc.
+
 Los tests de reservas usan la misma cadena y una base distinta, `appointments_test`. No tocan la base de desarrollo.
 
 La herramienta de migraciones está en `server/dotnet-tools.json`. Desde `server/`:
