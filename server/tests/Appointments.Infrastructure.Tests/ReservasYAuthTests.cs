@@ -96,6 +96,31 @@ public class ReservasYAuthTests
     }
 
     [Fact]
+    public async Task No_se_puede_mover_ni_cancelar_un_turno_que_ya_empezo()
+    {
+        var reloj = new RelojFijo(new DateTimeOffset(2026, 9, 28, 12, 0, 0, TimeSpan.Zero));
+        await using var servicios = BaseMySql.Crear(_mysql.ConnectionString, reloj);
+        var e = await ArmarNegocio(servicios);
+        await using var scope = servicios.CreateAsyncScope();
+        var reservas = scope.ServiceProvider.GetRequiredService<IReservasService>();
+        var trece = new DateTimeOffset(2026, 9, 28, 13, 0, 0, TimeSpan.Zero);
+        var turno = await reservas.CrearAsync(e.Cliente1, new CrearTurnoRequest(e.NegocioId, e.ServicioId, e.EmpleadoId, trece), CancellationToken.None);
+
+        reloj.Avanzar(TimeSpan.FromMinutes(90));
+
+        var mueve = await Assert.ThrowsAsync<ReglaDeNegocioException>(() =>
+            reservas.ReprogramarAsync(e.Cliente1, turno.Id, new ReprogramarTurnoRequest(trece.AddMinutes(120)), CancellationToken.None));
+        Assert.Equal(409, mueve.Status);
+
+        var cancela = await Assert.ThrowsAsync<ReglaDeNegocioException>(() =>
+            reservas.CancelarAsync(e.Cliente1, turno.Id, CancellationToken.None));
+        Assert.Equal(409, cancela.Status);
+
+        var mios = await reservas.MiosAsync(e.Cliente1, CancellationToken.None);
+        Assert.Equal(EstadoTurno.Confirmado, Assert.Single(mios).Estado);
+    }
+
+    [Fact]
     public async Task El_quinto_intento_bloquea_la_cuenta()
     {
         await using var servicios = BaseMySql.Crear(_mysql.ConnectionString, TimeProvider.System);
@@ -182,9 +207,11 @@ public class ReservasYAuthTests
 
     private sealed class RelojFijo : TimeProvider
     {
-        private readonly DateTimeOffset _ahora;
+        private DateTimeOffset _ahora;
 
         public RelojFijo(DateTimeOffset ahora) => _ahora = ahora;
+
+        public void Avanzar(TimeSpan tiempo) => _ahora += tiempo;
 
         public override DateTimeOffset GetUtcNow() => _ahora;
     }

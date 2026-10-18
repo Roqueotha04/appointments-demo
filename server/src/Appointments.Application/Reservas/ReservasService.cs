@@ -68,6 +68,8 @@ public class ReservasService : IReservasService
                 throw TurnoNoEncontrado();
             if (actual.Estado != EstadoTurno.Confirmado)
                 throw new ReglaDeNegocioException(409, "Turno", "Ese turno ya no se puede mover.");
+            if (actual.InicioUtc <= _clock.GetUtcNow().UtcDateTime)
+                throw new ReglaDeNegocioException(409, "Turno", "Ese turno ya empezó y no se puede mover.");
 
             return await Reservar(clienteId, actual.NegocioId, actual.ServicioId, actual.EmpleadoId, request.InicioUtc, actual.Id, ct);
         }, cancellationToken);
@@ -85,6 +87,8 @@ public class ReservasService : IReservasService
             throw TurnoNoEncontrado();
         if (turno.Estado != EstadoTurno.Confirmado)
             return;
+        if (turno.InicioUtc <= _clock.GetUtcNow().UtcDateTime)
+            throw new ReglaDeNegocioException(409, "Turno", "Ese turno ya empezó y no se puede cancelar.");
 
         turno.Estado = EstadoTurno.Cancelado;
         await _agenda.GuardarAsync(cancellationToken);

@@ -22,7 +22,7 @@ Los turnos se guardan en UTC. El día calendario y los huecos se calculan en la 
 
 ## Turno
 
-Estados: `Confirmado` y `Cancelado`. Reprogramar actualiza el mismo turno y lo deja confirmado. Solo el cliente dueño del turno puede reprogramarlo. Cancelar puede el cliente o el dueño del negocio.
+Estados: `Confirmado` y `Cancelado`. Reprogramar actualiza el mismo turno y lo deja confirmado. Solo el cliente dueño del turno puede reprogramarlo. Cancelar puede el cliente o el dueño del negocio. Un turno que ya empezó no se mueve ni se cancela.
 
 Reglas al confirmar o mover:
 
