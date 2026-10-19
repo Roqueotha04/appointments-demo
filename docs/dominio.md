@@ -18,7 +18,7 @@ Un servicio tiene duración en minutos y precio, y pertenece a un negocio. Un em
 
 La disponibilidad es semanal por empleado: día de la semana (0 domingo a 6 sábado) y una franja `horaInicio`–`horaFin`. Puede haber varias franjas el mismo día, sin solaparse. Un bloqueo tapa un intervalo concreto.
 
-Los turnos se guardan en UTC. El día calendario y los huecos se calculan en la zona del negocio. El paso de la grilla es la duración del servicio. Un hueco entra solo si el intervalo completo cabe en una franja y no pisa un turno confirmado ni un bloqueo. No se ofrecen horarios que ya pasaron.
+Los turnos se guardan en UTC. El día calendario y los huecos se calculan en la zona del negocio. El paso de la grilla es la duración del servicio. Un hueco entra solo si el intervalo completo cabe en una franja y no pisa un turno confirmado ni un bloqueo. No se ofrecen horarios que ya pasaron ni con más de 90 días de anticipación.
 
 ## Turno
 

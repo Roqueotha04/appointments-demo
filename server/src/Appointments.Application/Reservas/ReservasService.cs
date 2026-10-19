@@ -6,6 +6,8 @@ namespace Appointments.Application.Reservas;
 
 public class ReservasService : IReservasService
 {
+    private const int DiasMaximosDeAnticipacion = 90;
+
     private readonly IAgenda _agenda;
     private readonly IUnidadDeTrabajo _trabajo;
     private readonly IConfirmacionCorreo _correo;
@@ -172,8 +174,9 @@ public class ReservasService : IReservasService
         var ocupados = await _agenda.OcupadosAsync(empleadoId, desde, hasta, excluirTurnoId, cancellationToken);
 
         var ahora = _clock.GetUtcNow().UtcDateTime;
+        var limite = ahora.AddDays(DiasMaximosDeAnticipacion);
         return CalculadoraDeHuecos.Calcular(ventanas, ocupados, servicio.DuracionMinutos)
-            .Where(h => h > ahora)
+            .Where(h => h > ahora && h <= limite)
             .ToList();
     }
 

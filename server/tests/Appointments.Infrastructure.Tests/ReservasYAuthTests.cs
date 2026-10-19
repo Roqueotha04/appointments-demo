@@ -121,6 +121,25 @@ public class ReservasYAuthTests
     }
 
     [Fact]
+    public async Task No_se_reserva_con_mas_de_90_dias_de_anticipacion()
+    {
+        var reloj = new RelojFijo(new DateTimeOffset(2026, 9, 28, 12, 0, 0, TimeSpan.Zero));
+        await using var servicios = BaseMySql.Crear(_mysql.ConnectionString, reloj);
+        var e = await ArmarNegocio(servicios);
+        await using var scope = servicios.CreateAsyncScope();
+        var reservas = scope.ServiceProvider.GetRequiredService<IReservasService>();
+        var dentro = new DateTimeOffset(2026, 12, 21, 13, 0, 0, TimeSpan.Zero);
+        var fuera = new DateTimeOffset(2026, 12, 28, 13, 0, 0, TimeSpan.Zero);
+
+        var lejano = await Assert.ThrowsAsync<ReglaDeNegocioException>(() =>
+            reservas.CrearAsync(e.Cliente1, new CrearTurnoRequest(e.NegocioId, e.ServicioId, e.EmpleadoId, fuera), CancellationToken.None));
+        Assert.Equal(409, lejano.Status);
+
+        var turno = await reservas.CrearAsync(e.Cliente1, new CrearTurnoRequest(e.NegocioId, e.ServicioId, e.EmpleadoId, dentro), CancellationToken.None);
+        Assert.Equal(EstadoTurno.Confirmado, turno.Estado);
+    }
+
+    [Fact]
     public async Task El_quinto_intento_bloquea_la_cuenta()
     {
         await using var servicios = BaseMySql.Crear(_mysql.ConnectionString, TimeProvider.System);
