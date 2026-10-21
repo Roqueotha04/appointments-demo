@@ -95,21 +95,30 @@ public class ReservasService : IReservasService
 
     public async Task CancelarAsync(Guid usuarioId, Guid turnoId, CancellationToken cancellationToken)
     {
-        var turno = await _agenda.TurnoAsync(turnoId, cancellationToken) ?? throw TurnoNoEncontrado();
-        var negocio = await _agenda.NegocioAsync(turno.NegocioId, cancellationToken) ?? throw TurnoNoEncontrado();
+        var cancelado = await _trabajo.EjecutarAsync<Guid?>(async ct =>
+        {
+            var turno = await _agenda.TurnoAsync(turnoId, ct) ?? throw TurnoNoEncontrado();
+            var negocio = await _agenda.NegocioAsync(turno.NegocioId, ct) ?? throw TurnoNoEncontrado();
 
-        var esCliente = turno.ClienteId == usuarioId;
-        var esDueno = negocio.OwnerId == usuarioId;
-        if (!esCliente && !esDueno)
-            throw TurnoNoEncontrado();
-        if (turno.Estado != EstadoTurno.Confirmado)
-            return;
-        if (turno.InicioUtc <= _clock.GetUtcNow().UtcDateTime)
-            throw new ReglaDeNegocioException(409, "Turno", "Ese turno ya empezó y no se puede cancelar.");
+            var esCliente = turno.ClienteId == usuarioId;
+            var esDueno = negocio.OwnerId == usuarioId;
+            if (!esCliente && !esDueno)
+                throw TurnoNoEncontrado();
+            if (turno.Estado != EstadoTurno.Confirmado)
+                return null;
+            if (turno.InicioUtc <= _clock.GetUtcNow().UtcDateTime)
+                throw new ReglaDeNegocioException(409, "Turno", "Ese turno ya empezó y no se puede cancelar.");
 
-        turno.Estado = EstadoTurno.Cancelado;
-        await _agenda.GuardarAsync(cancellationToken);
-        await Confirmar(turno.Id, "Tu turno fue cancelado", cancellationToken);
+            // Mismo candado que al reservar: no se cancela a la vez que otro lo mueve u otro lo cancela.
+            await _trabajo.BloquearReservaAsync(turno.ClienteId, turno.EmpleadoId, ct);
+
+            turno.Estado = EstadoTurno.Cancelado;
+            await _agenda.GuardarAsync(ct);
+            return turno.Id;
+        }, cancellationToken);
+
+        if (cancelado is { } id)
+            await Confirmar(id, "Tu turno fue cancelado", cancellationToken);
     }
 
     /// <summary>Crea el turno, o mueve el existente si se pasa su id. Devuelve el id del turno guardado.</summary>

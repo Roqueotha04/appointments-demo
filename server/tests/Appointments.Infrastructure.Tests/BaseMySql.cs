@@ -31,7 +31,7 @@ public sealed class BaseMySql : IAsyncLifetime
 
     public Task DisposeAsync() => Task.CompletedTask;
 
-    public static ServiceProvider Crear(string connectionString, TimeProvider reloj)
+    public static ServiceProvider Crear(string connectionString, TimeProvider reloj, IConfirmacionCorreo? correo = null)
     {
         var services = new ServiceCollection();
         services.AddLogging();
@@ -62,7 +62,7 @@ public sealed class BaseMySql : IAsyncLifetime
             .AddRoles<IdentityRole<Guid>>()
             .AddEntityFrameworkStores<AppDbContext>();
         services.AddSingleton(reloj);
-        services.AddSingleton<IConfirmacionCorreo, CorreoNulo>();
+        services.AddSingleton(correo ?? new CorreoNulo());
         services.AddScoped<IEmisorDeTokens, JwtEmisor>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IAgenda, Agenda>();

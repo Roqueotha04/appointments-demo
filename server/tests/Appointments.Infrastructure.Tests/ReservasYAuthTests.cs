@@ -121,6 +121,38 @@ public class ReservasYAuthTests
     }
 
     [Fact]
+    public async Task Cancelar_a_la_vez_deja_un_solo_cancelado_y_cancelar_de_nuevo_no_falla()
+    {
+        var reloj = new RelojFijo(new DateTimeOffset(2026, 9, 28, 12, 0, 0, TimeSpan.Zero));
+        var correo = new CorreoContador();
+        await using var servicios = BaseMySql.Crear(_mysql.ConnectionString, reloj, correo);
+        var e = await ArmarNegocio(servicios);
+        var trece = new DateTimeOffset(2026, 9, 28, 13, 0, 0, TimeSpan.Zero);
+        await using var creacion = servicios.CreateAsyncScope();
+        var turno = await creacion.ServiceProvider.GetRequiredService<IReservasService>()
+            .CrearAsync(e.Cliente1, new CrearTurnoRequest(e.NegocioId, e.ServicioId, e.EmpleadoId, trece), CancellationToken.None);
+        var enviadosAlCrear = correo.Enviados;
+
+        await using var uno = servicios.CreateAsyncScope();
+        await using var dos = servicios.CreateAsyncScope();
+        var porCliente = uno.ServiceProvider.GetRequiredService<IReservasService>()
+            .CancelarAsync(e.Cliente1, turno.Id, CancellationToken.None);
+        var porDueno = dos.ServiceProvider.GetRequiredService<IReservasService>()
+            .CancelarAsync(e.Dueno, turno.Id, CancellationToken.None);
+        await Task.WhenAll(porCliente, porDueno);
+
+        Assert.Equal(enviadosAlCrear + 1, correo.Enviados);
+
+        await using var tres = servicios.CreateAsyncScope();
+        var reservas = tres.ServiceProvider.GetRequiredService<IReservasService>();
+        await reservas.CancelarAsync(e.Cliente1, turno.Id, CancellationToken.None);
+        Assert.Equal(enviadosAlCrear + 1, correo.Enviados);
+
+        var mios = await reservas.MiosAsync(e.Cliente1, CancellationToken.None);
+        Assert.Equal(EstadoTurno.Cancelado, Assert.Single(mios).Estado);
+    }
+
+    [Fact]
     public async Task El_dueno_ve_los_turnos_de_su_negocio_por_dia_y_nadie_mas()
     {
         var reloj = new RelojFijo(new DateTimeOffset(2026, 9, 28, 12, 0, 0, TimeSpan.Zero));
@@ -253,6 +285,19 @@ public class ReservasYAuthTests
     }
 
     private sealed record Escenario(Guid NegocioId, Guid ServicioId, Guid EmpleadoId, Guid Cliente1, Guid Cliente2, Guid Dueno);
+
+    private sealed class CorreoContador : IConfirmacionCorreo
+    {
+        private int _enviados;
+
+        public int Enviados => _enviados;
+
+        public Task EnviarAsync(string para, string asunto, string cuerpo, CancellationToken cancellationToken)
+        {
+            Interlocked.Increment(ref _enviados);
+            return Task.CompletedTask;
+        }
+    }
 
     private sealed class RelojFijo : TimeProvider
     {
