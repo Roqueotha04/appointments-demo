@@ -56,5 +56,4 @@ public interface ICatalogoService
     Task<BloqueoDto> CrearBloqueoAsync(Guid ownerId, Guid negocioId, Guid empleadoId, CrearBloqueoRequest request, CancellationToken cancellationToken);
     Task EliminarBloqueoAsync(Guid ownerId, Guid negocioId, Guid empleadoId, Guid bloqueoId, CancellationToken cancellationToken);
 
-    Task<IReadOnlyList<TurnoListaDto>> ListarTurnosAsync(Guid ownerId, Guid negocioId, CancellationToken cancellationToken);
 }

@@ -1,6 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Appointments.Application.Catalogo;
+using Appointments.Application.Reservas;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,8 +13,13 @@ namespace Appointments.Api.Controllers;
 public class NegociosController : ControllerBase
 {
     private readonly ICatalogoService _catalogo;
+    private readonly IReservasService _reservas;
 
-    public NegociosController(ICatalogoService catalogo) => _catalogo = catalogo;
+    public NegociosController(ICatalogoService catalogo, IReservasService reservas)
+    {
+        _catalogo = catalogo;
+        _reservas = reservas;
+    }
 
     [HttpGet]
     public Task<IReadOnlyList<NegocioDto>> Listar(CancellationToken cancellationToken) =>
@@ -99,8 +105,8 @@ public class NegociosController : ControllerBase
     }
 
     [HttpGet("{id:guid}/turnos")]
-    public Task<IReadOnlyList<TurnoListaDto>> Turnos(Guid id, CancellationToken cancellationToken) =>
-        _catalogo.ListarTurnosAsync(UsuarioId(), id, cancellationToken);
+    public Task<IReadOnlyList<TurnoListaDto>> Turnos(Guid id, [FromQuery] DateOnly? desde, [FromQuery] DateOnly? hasta, CancellationToken cancellationToken) =>
+        _reservas.TurnosDelNegocioAsync(UsuarioId(), id, desde, hasta, cancellationToken);
 
     private Guid UsuarioId() => Guid.Parse(User.FindFirstValue(JwtRegisteredClaimNames.Sub)!);
 }

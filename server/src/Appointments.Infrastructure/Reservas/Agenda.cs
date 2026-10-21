@@ -92,4 +92,15 @@ public class Agenda : IAgenda
             .Take(maximo)
             .ALista(_db.Users.AsNoTracking())
             .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<TurnoListaDto>> TurnosDelNegocioAsync(
+        Guid negocioId, DateTime? desdeUtc, DateTime? hastaUtc, int maximo, CancellationToken cancellationToken) =>
+        await _db.Turnos.AsNoTracking()
+            .Where(t => t.NegocioId == negocioId)
+            .Where(t => desdeUtc == null || t.InicioUtc >= desdeUtc)
+            .Where(t => hastaUtc == null || t.InicioUtc < hastaUtc)
+            .OrderByDescending(t => t.InicioUtc)
+            .Take(maximo)
+            .ALista(_db.Users.AsNoTracking())
+            .ToListAsync(cancellationToken);
 }

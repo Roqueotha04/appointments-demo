@@ -121,6 +121,36 @@ public class ReservasYAuthTests
     }
 
     [Fact]
+    public async Task El_dueno_ve_los_turnos_de_su_negocio_por_dia_y_nadie_mas()
+    {
+        var reloj = new RelojFijo(new DateTimeOffset(2026, 9, 28, 12, 0, 0, TimeSpan.Zero));
+        await using var servicios = BaseMySql.Crear(_mysql.ConnectionString, reloj);
+        var e = await ArmarNegocio(servicios);
+        await using var scope = servicios.CreateAsyncScope();
+        var reservas = scope.ServiceProvider.GetRequiredService<IReservasService>();
+        var trece = new DateTimeOffset(2026, 9, 28, 13, 0, 0, TimeSpan.Zero);
+        var turno = await reservas.CrearAsync(e.Cliente1, new CrearTurnoRequest(e.NegocioId, e.ServicioId, e.EmpleadoId, trece), CancellationToken.None);
+
+        var ajeno = await Assert.ThrowsAsync<ReglaDeNegocioException>(() =>
+            reservas.TurnosDelNegocioAsync(e.Cliente1, e.NegocioId, null, null, CancellationToken.None));
+        Assert.Equal(404, ajeno.Status);
+
+        var todos = await reservas.TurnosDelNegocioAsync(e.Dueno, e.NegocioId, null, null, CancellationToken.None);
+        Assert.Equal(turno.Id, Assert.Single(todos).Id);
+
+        var dia = new DateOnly(2026, 9, 28);
+        var ese = await reservas.TurnosDelNegocioAsync(e.Dueno, e.NegocioId, dia, dia, CancellationToken.None);
+        Assert.Single(ese);
+
+        var otro = await reservas.TurnosDelNegocioAsync(e.Dueno, e.NegocioId, dia.AddDays(1), dia.AddDays(1), CancellationToken.None);
+        Assert.Empty(otro);
+
+        var invertido = await Assert.ThrowsAsync<ReglaDeNegocioException>(() =>
+            reservas.TurnosDelNegocioAsync(e.Dueno, e.NegocioId, dia.AddDays(1), dia, CancellationToken.None));
+        Assert.Equal(400, invertido.Status);
+    }
+
+    [Fact]
     public async Task No_se_reserva_con_mas_de_90_dias_de_anticipacion()
     {
         var reloj = new RelojFijo(new DateTimeOffset(2026, 9, 28, 12, 0, 0, TimeSpan.Zero));

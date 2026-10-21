@@ -257,17 +257,6 @@ public class CatalogoService : ICatalogoService
         await _db.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<IReadOnlyList<TurnoListaDto>> ListarTurnosAsync(Guid ownerId, Guid negocioId, CancellationToken cancellationToken)
-    {
-        await DelOwner(ownerId, negocioId, cancellationToken);
-        return await _db.Turnos.AsNoTracking()
-            .Where(t => t.NegocioId == negocioId)
-            .OrderByDescending(t => t.InicioUtc)
-            .Take(200)
-            .ALista(_db.Users.AsNoTracking())
-            .ToListAsync(cancellationToken);
-    }
-
     private async Task<Negocio> DelOwner(Guid ownerId, Guid negocioId, CancellationToken cancellationToken)
     {
         var negocio = await _db.Negocios.FirstOrDefaultAsync(n => n.Id == negocioId, cancellationToken);

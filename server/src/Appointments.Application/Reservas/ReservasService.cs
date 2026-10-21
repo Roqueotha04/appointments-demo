@@ -61,6 +61,21 @@ public class ReservasService : IReservasService
     public Task<IReadOnlyList<TurnoListaDto>> MiosAsync(Guid clienteId, CancellationToken cancellationToken) =>
         _agenda.TurnosDelClienteAsync(clienteId, 100, cancellationToken);
 
+    public async Task<IReadOnlyList<TurnoListaDto>> TurnosDelNegocioAsync(
+        Guid duenoId, Guid negocioId, DateOnly? desde, DateOnly? hasta, CancellationToken cancellationToken)
+    {
+        var negocio = await _agenda.NegocioAsync(negocioId, cancellationToken);
+        if (negocio is null || negocio.OwnerId != duenoId)
+            throw new ReglaDeNegocioException(404, "Negocio", "No encontramos ese negocio.");
+        if (desde is not null && hasta is not null && hasta < desde)
+            throw new ReglaDeNegocioException(400, "Rango", "La fecha final no puede ser anterior a la inicial.");
+
+        var zona = ZonasHorarias.Obtener(negocio.ZonaHoraria);
+        DateTime? desdeUtc = desde is null ? null : ZonasHorarias.LimitesDelDiaUtc(desde.Value, zona).DesdeUtc;
+        DateTime? hastaUtc = hasta is null ? null : ZonasHorarias.LimitesDelDiaUtc(hasta.Value, zona).HastaUtc;
+        return await _agenda.TurnosDelNegocioAsync(negocio.Id, desdeUtc, hastaUtc, 200, cancellationToken);
+    }
+
     public async Task<TurnoListaDto> ReprogramarAsync(Guid clienteId, Guid turnoId, ReprogramarTurnoRequest request, CancellationToken cancellationToken)
     {
         var id = await _trabajo.EjecutarAsync(async ct =>

@@ -24,7 +24,7 @@ Requieren sesión.
 - `PUT /api/negocios/{id}/empleados/{empleadoId}/servicios` `{ servicioIds }`
 - `GET/PUT /api/negocios/{id}/empleados/{empleadoId}/disponibilidad` `{ franjas: [{ diaSemana, horaInicio, horaFin }] }`
 - `GET/POST /api/negocios/{id}/empleados/{empleadoId}/bloqueos`, `DELETE .../bloqueos/{bloqueoId}`
-- `GET /api/negocios/{id}/turnos` incluye `cliente` y `clienteEmail`
+- `GET /api/negocios/{id}/turnos?desde=yyyy-MM-dd&hasta=yyyy-MM-dd` incluye `cliente` y `clienteEmail`. Ambas fechas son opcionales, inclusivas y se leen en la zona del negocio. Devuelve hasta 200, los más recientes primero.
 
 `DELETE` de servicio o empleado los desactiva. No borra turnos históricos.
 

@@ -32,6 +32,10 @@ public interface IAgenda
 
     Task<TurnoListaDto> TurnoListaAsync(Guid turnoId, CancellationToken cancellationToken);
     Task<IReadOnlyList<TurnoListaDto>> TurnosDelClienteAsync(Guid clienteId, int maximo, CancellationToken cancellationToken);
+
+    /// <summary>Turnos del negocio, más recientes primero. Los límites son opcionales: inicio incluido, fin excluido.</summary>
+    Task<IReadOnlyList<TurnoListaDto>> TurnosDelNegocioAsync(
+        Guid negocioId, DateTime? desdeUtc, DateTime? hastaUtc, int maximo, CancellationToken cancellationToken);
 }
 
 /// <summary>

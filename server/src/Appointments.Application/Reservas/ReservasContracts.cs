@@ -18,6 +18,7 @@ public interface IReservasService
     Task<IReadOnlyList<TurnoListaDto>> MiosAsync(Guid clienteId, CancellationToken cancellationToken);
     Task<TurnoListaDto> ReprogramarAsync(Guid clienteId, Guid turnoId, ReprogramarTurnoRequest request, CancellationToken cancellationToken);
     Task CancelarAsync(Guid usuarioId, Guid turnoId, CancellationToken cancellationToken);
+    Task<IReadOnlyList<TurnoListaDto>> TurnosDelNegocioAsync(Guid duenoId, Guid negocioId, DateOnly? desde, DateOnly? hasta, CancellationToken cancellationToken);
 }
 
 public record EmpleadoPublicoDto(Guid Id, string Nombre);
